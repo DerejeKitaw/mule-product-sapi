@@ -1,0 +1,53 @@
+# API specification
+api:
+  name: "${project.artifactId}"
+  version: "${project.version}"
+  #Replace with respective autodiscovery id
+  autodiscoveryID: "16422516"
+  
+# Listener configuration
+https:
+  host: "0.0.0.0"
+  port: "8082"
+
+# API Configurations
+pim-sys-api:
+  http-listener:
+    path: "/api/*"
+
+# Retry configuration 
+retry:
+  # pim
+  pim:
+    delayMillisecs: "3000"
+    numRetries: "1"
+
+# PIM database configuration
+pim:
+  database:
+    # Replace with respective database hostname
+localhost"
+    port: "1521"
+    # Replace with respective username and password
+    username: "admin_pim"
+    service-name: "ORCL"
+    password: "Password overridden at deploy time"   
+    products:
+      selectQuery: "select * from products  where product_id=:productId"
+    reconnect-frequency: "1000"
+    reconnection: "2"
+    timezone: "US/Eastern"
+    default-offset: "0"
+    default-rowLimit: "20"
+    # Database pooling configuration
+    maxPoolSize:  "100"
+    minPoolSize:  "15"
+    incrementSize:  "5"
+    cacheSize:  "5"
+    maxWait:  "120" #seconds
+      
+# Customized  application and logging messages in the below section
+application-msgs:
+  pim-product-select-query: "pim-product-select-query="
+  pim-product-select-query-response: "pim-product-select-query- response="
+  pim-product-select-transform-response: "pim-product-select-transform-response="

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="pim-test-suite.xml" />
+	<munit:test name="pim-test-suite-get-product-by-id-subflowTest" doc:id="0735d270-32e2-46b2-8c46-3f44ecf52ea1" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="pim db" doc:id="4da2ff41-0371-49cb-9996-2adede2d9607" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="pim select query" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="pim-databaseConfig" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[ [
+   { 
+      "PRODUCT_ID":"100",
+      "BRAND":"page",
+      "SHORT_DESCRIPTION":"this is skirt",
+      "LONG_DESCRIPTION":"suitable for any top",
+      "UPC":"123456",
+      "UNIT":"100",
+      "PRODUCT_TYPE":"master",
+      "OWNING_CATALOG_ID":"Apperal",
+      "MANUFACTURE_NAME":"xyz co",
+      "MANUFACTURE_SKU":"wsa123456",
+      "NAME":"Skirt"
+   }
+]]' encoding="UTF-8" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to get-product-by-id-subflow" doc:id="551a105d-c238-43ea-aecd-c5119018309c" name="products_get-product-by-id"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="b4673c0d-e29b-4552-bac1-92923719f393" expression="#[payload.productId]" is="#[MunitTools::equalTo('100')]"/>
+			<munit-tools:verify-call doc:name="Verify call" doc:id="599ea7f7-e241-49f8-a0d9-7ac43e032ec4" processor="ee:transform">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="get products response" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="pim-test-suite-get-products-subflowTest" doc:id="b308a136-6bf7-4ec3-a369-b015e5a6b9bc" description="Test">
+		<munit:behavior >
+			<munit-tools:spy doc:name="Spy" doc:id="4acc752b-5825-4adf-9fa8-fea469004756" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="pim select query" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="pim-databaseConfig" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:before-call >
+					<munit-tools:assert-equals doc:name="Verify offset value" doc:id="26fa55c1-34c9-4ed1-b07e-e3afa4b12e67" actual="#[vars.inputParameters.offset]" expected="#[p('pim.database.default-offset')]"/>
+					<munit-tools:assert-equals doc:name="Verify rowLimit value" doc:id="2885c9cc-9837-4a83-b999-ca2c56aff478" actual="#[vars.inputParameters.rowLimit]" expected="#[p('pim.database.default-rowLimit')]" />
+					<munit-tools:assert-equals doc:name="Verify date filter value" doc:id="64a50271-543d-4ace-9ab1-67fdf6c31881" actual='#[payload contains ("where")]' expected="#[false]" />
+				</munit-tools:before-call>
+			</munit-tools:spy>
+			<munit-tools:mock-when doc:name="pim db" doc:id="b769d52a-04c5-43c3-9000-93ffbd56b0c9" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="pim select query" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="pim-databaseConfig" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[ [
+   { 
+      "PRODUCT_ID":"100",
+      "BRAND":"page",
+      "SHORT_DESCRIPTION":"this is skirt",
+      "LONG_DESCRIPTION":"suitable for any top",
+      "UPC":"123456",
+      "UNIT":"100",
+      "PRODUCT_TYPE":"master",
+      "OWNING_CATALOG_ID":"Apperal",
+      "MANUFACTURE_NAME":"xyz co",
+      "MANUFACTURE_SKU":"wsa123456",
+      "NAME":"Skirt"
+   }
+]]' encoding="UTF-8" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to products_get-products-subflow" doc:id="1cbf3e0e-49a3-49b6-96a4-982193686451" name="products_get-products"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="8a372675-8179-4fc0-8561-3c5c6897a7e3" expression="#[payload[0].productId]" is="#[MunitTools::equalTo('100')]"/>
+		</munit:validation>
+	</munit:test>
+
+</mule>

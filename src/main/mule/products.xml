@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
+	<sub-flow name="products_get-product-by-id" doc:id="36f57f05-41e3-4aa1-9120-c78e8dbb026b" >
+		<set-variable value="#[p('pim.database.products.selectQuery')]" doc:name="productsSelectQuery" doc:id="318f853e-7275-45ba-ac5f-54d5f5595422" variableName="productsSelectQuery"/>
+		<until-successful maxRetries="${retry.pim.numRetries}" doc:name="until-successful-call-pim-select-query" doc:id="563644c6-9e22-47c1-8a9a-a1bb6557b3b7" millisBetweenRetries="${retry.pim.delayMillisecs}">
+			<try doc:name="Try" doc:id="05cd5727-167f-4e1a-91af-3f9507ec58fd" >
+				<db:select doc:name="pim select query" doc:id="95807d6e-ed25-450d-8307-21b88d8968ec" config-ref="pim-databaseConfig">
+			<db:sql>#[vars.productsSelectQuery]</db:sql>
+			<db:input-parameters><![CDATA[#[{
+	"productId": attributes.uriParams.'id' default "100"
+}]]]></db:input-parameters>
+		</db:select>
+<error-handler>
+					<on-error-continue enableNotifications="true"
+						logException="true" doc:name="On Error Continue"
+						doc:id="b2e0dc14-a6b8-4c01-8cc4-23f03bec3989"
+						type="DB:BAD_SQL_SYNTAX, DB:QUERY_EXECUTION">
+						<flow-ref doc:name="common-error-handler_connector-exception"
+							doc:id="d43e2cb8-9a24-4def-b6fe-e13df01b3c17"
+							name="common-error-handler_connector-exception" />
+					</on-error-continue>
+				</error-handler>
+			</try>
+		</until-successful>
+		<choice doc:name="Check for Query response" doc:id="31658d50-dcb9-4a85-b22e-5f6ffcb403c2" >
+			<when expression="#[vars.exceptionResponse != null]">
+				<ee:transform doc:name="Error Message" doc:id="03bd30e2-dc16-4ab4-ae1a-8e7986fa7aaf" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.exceptionResponse]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression="#[isEmpty(payload)]">
+				<ee:transform doc:name="Set product not found response" doc:id="c1ce6564-d529-41f8-a7b7-b1a5101b8209" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatus" ><![CDATA[%dw 2.0
+output application/java
+---
+404]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<ee:transform doc:name="get products response" doc:id="8712dd1d-3a60-48e8-9c4a-906206d6a71c">
+			<ee:message>
+						<ee:set-payload ><![CDATA[%dw 2.0
+import dwl::PimProductMapping
+output application/json
+---
+PimProductMapping::transformProduct(payload[0])]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<sub-flow name="products_get-products" doc:id="3f7eeb01-cc7c-4541-998d-f9e6698a1322" >
+		<ee:transform doc:name="Set inputParameters" doc:id="d791ef1d-ae33-46c2-9a2a-29f7cdc29ba7" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="inputParameters" ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"offset": attributes.queryParams.offset default p('pim.database.default-offset'),
+	"rowLimit":attributes.queryParams.limit default p('pim.database.default-rowLimit'),
+	"lastModifiedTimestamp": if(attributes.queryParams.lastModified == null) "" else (attributes.queryParams.lastModified >> 'US/Eastern' ) as LocalDateTime {format : "yyyy-MM-dd HH:mm:ss"}
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<ee:transform doc:name="Prepare select query" doc:id="f393fe57-8e49-45d6-9823-70d63f4654d4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+var whereClause = if(attributes.queryParams.lastModified == null) "" else "  where last_modified >:lastModifiedTimestamp   order by product_type "
+output application/java
+---
+"SELECT * from products " ++ whereClause ++ " OFFSET :offset ROWS FETCH NEXT :rowLimit ROWS ONLY"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<until-successful maxRetries="${retry.pim.numRetries}" doc:name="until-successful-call-pim-select-query" doc:id="5cfad60f-2ebd-46a1-a936-bafda6ef86b3" millisBetweenRetries="${retry.pim.delayMillisecs}" >
+			<try doc:name="Try" doc:id="f588ce59-d284-499c-95e1-37a4fbc90d91" >
+				<db:select doc:name="pim select query" doc:id="f9e990b7-63bc-45a4-8cb5-2fc85a3c4998" config-ref="pim-databaseConfig" >
+					<db:sql ><![CDATA[#[payload]]]></db:sql>
+					<db:input-parameters ><![CDATA[#[vars.inputParameters]]]></db:input-parameters>
+				</db:select>
+				<error-handler >
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="f8544b04-1a0a-4c84-86e8-a0ac80f37409" type="DB:BAD_SQL_SYNTAX, DB:QUERY_EXECUTION" >
+						<flow-ref doc:name="common-error-handler_http-exception" doc:id="91ee3c23-b54d-425f-a1a7-50a840790306" name="common-error-handler_http-exception" />
+					</on-error-continue>
+				</error-handler>
+			</try>
+		</until-successful>
+		<ee:transform doc:name="get products response" doc:id="aa5bf0c5-6354-4877-a0e7-cb1ef1a79550">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+import dwl::PimProductMapping
+output application/json
+---
+payload map PimProductMapping::transformProduct($)
+]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+	</sub-flow>
+</mule>

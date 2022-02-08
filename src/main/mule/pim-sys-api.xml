@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd ">
+    <flow name="pim-sys-api-main">
+        <http:listener path="${pim-sys-api.http-listener.path}" config-ref="pim-sys-api-httpListenerConfig">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="pim-sys-api-config" />
+    </flow>
+    <flow name="pim-sys-api_console">
+        <http:listener path="/console/*" config-ref="pim-sys-api-httpListenerConfig">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="pim-sys-api-config" />
+    </flow>
+    <flow name="get:\products\(id):pim-sys-api-config">
+        <set-variable value="#[attributes.uriParams.'id' default '']" doc:name="productId" doc:id="4d6c075d-3c5e-48ec-a056-a7bee2b60ecb" variableName="productId"/>
+		<logger level="DEBUG" doc:name="Start get product by Id logger" doc:id="e10fe608-079c-4f6b-b300-c60fec1f8f84" message="#['Start - Get product by ID:' ++ vars.productId]"/>
+		<flow-ref doc:name="products_get-product-by-id" doc:id="f2ec354c-f9c3-4011-9ea3-7562eb56f4e1" name="products_get-product-by-id" />
+		<logger level="DEBUG" doc:name="End get product by Id logger" doc:id="55ee4f5d-b1e6-4151-be52-00f944ae8acb" message="#['End - Get product by ID:' ++  vars.productId]"/>
+    </flow>
+    <flow name="get:\ping:pim-sys-api-config">
+        <flow-ref doc:name="ping_get-health" doc:id="19eaa074-5480-4886-bd11-188d4239c225" name="ping_get-health" />
+    </flow>
+    <flow name="get:\products:pim-sys-api-config">
+        <flow-ref doc:name="products_get-products" doc:id="a9a62371-84e7-491c-bb99-2008713dfa97" name="products_get-products" />
+    </flow>
+</mule>

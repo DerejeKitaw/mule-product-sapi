@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<sub-flow name="ping_get-health" doc:id="c95e6a2f-70da-49b8-b863-d488230fe79d" >
+		<set-variable value='#[attributes.queryParams.checkDependencies == "true" default false]' doc:name="checkDependencies" doc:id="14b25cb9-986b-4ba7-bb5d-f418fec0dfe7" variableName="checkDependencies"/>
+		<choice doc:name="Choice" doc:id="7358eaf3-46a7-4376-9f73-9325c95c07d2" >
+			<when expression="#[vars.checkDependencies]">
+				<flow-ref doc:name="Check Dependencies" doc:id="bb499d28-6f41-41e3-966a-bc28b8395fd5" name="ping_check-dependencies" target="dependencyList"/>
+			</when>
+			<otherwise>
+				<set-variable doc:name="dependencyList" doc:id="78be94ce-684f-4882-8292-db9f333c7e9e" variableName="dependencyList" value="#[null]"/>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Map Response" doc:id="96d42720-4ea8-41e6-bd77-c0946521f25f">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+
+fun getDependencyStatus(dependencyResponse) = if(sizeOf(dependencyResponse.status find "UP") == sizeOf(dependencyResponse))
+    "OK"
+else if (sizeOf(dependencyResponse.status find "DOWN") == sizeOf(dependencyResponse))
+    "OFFLINE"
+else
+    "DEGRADED"
+---
+{
+	status: if(vars.checkDependencies == true) getDependencyStatus(vars.dependencyList) else "OK",
+	apiName: p("api.name") default "",
+	apiVersion: p("api.version") default "",
+	(dependencies: vars.dependencyList map(item) -> {
+		name: item.name default "",
+		status: item.status default ""
+	})
+	if(vars.dependencyList != null)
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+		<set-variable value="200" doc:name="httpStatus" doc:id="dc3d6df9-f137-4d8e-94f7-d65343ee35ea" variableName="httpStatus"/>
+	</sub-flow>
+	<sub-flow name="ping_check-dependencies" doc:id="ef7af644-db2e-4f2d-9968-f74aec23dd88" >
+		<ee:transform doc:name="set pingQuery as payload" doc:id="66963fb7-db8c-468b-8d54-bb2ac9ec0a37">
+			<ee:message>
+				<ee:set-payload resource="dwl/pim-ping-query.dwl" />
+			</ee:message>
+		</ee:transform>
+		<try doc:name="Try" doc:id="ebce9bbb-1d39-4c56-9a50-a0f78ab72935" >
+			<db:select doc:name="pim ping query" doc:id="fd748637-5957-475f-b6fa-f2d056954358" config-ref="pim-databaseConfig">
+				<db:sql ><![CDATA[#[payload]]]></db:sql>
+			</db:select>
+			<set-variable value="#['UP']" doc:name="backendSystemStatus" doc:id="ab015c71-6f84-4513-9155-b6a3a28e192a" variableName="backendSystemStatus" />
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="638e49c7-0715-4fb9-92f6-44db0327f6bc" type="ANY">
+					<set-variable value="#['DOWN']" doc:name="backendSystemStatus" doc:id="f419698d-4712-44e9-8431-c158250b83a2" variableName="backendSystemStatus"/>
+			</on-error-continue>
+			</error-handler>
+		</try>
+		<ee:transform doc:name="set payload" doc:id="98dd81ac-19f0-4462-89df-f32ad3dfe95d">
+			<ee:message>
+				<ee:set-payload resource="dwl/pim-ping-response.dwl" />
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+</mule>

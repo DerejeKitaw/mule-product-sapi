@@ -1,0 +1,346 @@
+{
+	"info": {
+		"_postman_id": "2682fe4e-0bdb-42e0-80c6-adda0e801e37",
+		"name": "accelerator-pim-sys-api",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Products",
+			"item": [
+				{
+					"name": "accelerator-pim-sys-api - GET - /products/{id}",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Successful GET request\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{host_pim_sys_api}}/api/products/100000m",
+							"protocol": "https",
+							"host": [
+								"{{host_pim_sys_api}}"
+							],
+							"path": [
+								"api",
+								"products",
+								"100000m"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "accelerator-pim-sys-api - GET - /products/{id}-Fail",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Product not found GET request\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([404]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{host_pim_sys_api}}/api/products/100000",
+							"protocol": "https",
+							"host": [
+								"{{host_pim_sys_api}}"
+							],
+							"path": [
+								"api",
+								"products",
+								"100000"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "accelerator-pim-sys-api - GET - /products",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Successful GET request\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{host_pim_sys_api}}/api/products?offset=0&limit=20&lastModified=2020-09-01T11:45:58Z",
+							"protocol": "https",
+							"host": [
+								"{{host_pim_sys_api}}"
+							],
+							"path": [
+								"api",
+								"products"
+							],
+							"query": [
+								{
+									"key": "offset",
+									"value": "0"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "lastModified",
+									"value": "2020-09-01T11:45:58Z"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "accelerator-pim-sys-api - GET - /products (Fail)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Successful GET request\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([400]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{host_pim_sys_api}}/api/products?offset=0&limit=20&lastModified=2020-09-01",
+							"protocol": "https",
+							"host": [
+								"{{host_pim_sys_api}}"
+							],
+							"path": [
+								"api",
+								"products"
+							],
+							"query": [
+								{
+									"key": "offset",
+									"value": "0"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "lastModified",
+									"value": "2020-09-01"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Ping",
+			"item": [
+				{
+					"name": "Query Health",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{host_pim_sys_api}}/api/ping",
+							"protocol": "https",
+							"host": [
+								"{{host_pim_sys_api}}"
+							],
+							"path": [
+								"api",
+								"ping"
+							]
+						},
+						"description": "Call ping operation with no parameters"
+					},
+					"response": []
+				},
+				{
+					"name": "Query Health with Dependencies",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{host_pim_sys_api}}/api/ping?checkDependencies=true",
+							"protocol": "https",
+							"host": [
+								"{{host_pim_sys_api}}"
+							],
+							"path": [
+								"api",
+								"ping"
+							],
+							"query": [
+								{
+									"key": "checkDependencies",
+									"value": "true",
+									"description": "Include health of dependencies"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Query Health with Invalid Parameter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{host_pim_sys_api}}/api/ping?checkDependencies=true-ish",
+							"protocol": "https",
+							"host": [
+								"{{host_pim_sys_api}}"
+							],
+							"path": [
+								"api",
+								"ping"
+							],
+							"query": [
+								{
+									"key": "checkDependencies",
+									"value": "true-ish",
+									"description": "Should not return dependencies"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "host_pim_sys_api",
+			"value": "accel-pim-sys-api-v1-dev.ca-c1.cloudhub.io"
+		}
+	]
+}

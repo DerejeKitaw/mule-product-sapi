@@ -1,0 +1,1 @@
+SELECT product_id  FROM products WHERE last_modified >= to_date('2019-10-30 20:15:15', 'YYYY-MM-DD HH24:MI:SS')
